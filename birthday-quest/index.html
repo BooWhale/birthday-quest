@@ -387,7 +387,7 @@
       display: block;
     }
 
-    /* กล่องสำหรับเล่นไฟล์วิดีโอ MP4 */
+    /* กล่องวิดีโอแบบ Silent Preload: ไม่ใช้ display: none เพื่อให้เบราว์เซอร์แอบโหลดแคชตลอดเวลา */
     .video-stage-box {
       width: 95%;
       flex: 1 1 auto;
@@ -398,8 +398,20 @@
       border: 3px solid #5a3418;
       box-shadow: 0 8px 24px rgba(0,0,0,0.25);
       overflow: hidden;
-      display: none;
       margin: 4px 0;
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .video-stage-box.show {
+      position: relative;
+      top: 0;
+      left: 0;
+      opacity: 1;
+      pointer-events: auto;
     }
 
     .video-stage-box video {
@@ -534,9 +546,9 @@
             <img src="memory1.png" id="memoryImg" class="polaroid-img" alt="Memory">
           </div>
 
-          <!-- ลิงก์ตรงไฟล์วิดีโอ Catbox -->
+          <!-- วิดีโอคงอยู่ใน DOM เสมอเพื่อแอบดูด Buffer ล่วงหน้า -->
           <div class="video-stage-box" id="videoContainer">
-            <video id="localVideo" controls playsinline preload="auto">
+            <video id="localVideo" controls playsinline preload="auto" muted>
               <source src="https://files.catbox.moe/ti6kgo.mp4" type="video/mp4">
               เบราว์เซอร์ของคุณไม่รองรับการเล่นวิดีโอ
             </video>
@@ -1057,19 +1069,21 @@
 
       if (pageData.isVideoEnding) {
         polaroid.style.display = "none";
-        videoBox.style.display = "block";
+        videoBox.classList.add("show");
         noteEl.textContent = pageData.note;
         btnNext.disabled = true;
 
+        // ปลดเสียงและเล่นต่อเนื่องทันที
+        localVideo.muted = false;
         localVideo.currentTime = 0;
         localVideo.play().catch(e => {
-          console.log("Autoplay note:", e);
+          console.log("Play note:", e);
         });
       } else {
         if (!localVideo.paused) {
           localVideo.pause();
         }
-        videoBox.style.display = "none";
+        videoBox.classList.remove("show");
         polaroid.style.display = "flex";
         imgEl.src = pageData.image;
         noteEl.textContent = pageData.note;
@@ -1120,22 +1134,31 @@
       }
     ]);
 
-    // โหลดไฟล์วิดีโอล่วงหน้าลงแรมทันทีที่เริ่มเปิดหน้าเว็บ
-    window.addEventListener("load", () => {
-      fetch("https://files.catbox.moe/ti6kgo.mp4")
-        .then(response => {
-          if (!response.ok) throw new Error("Network response was not ok");
-          return response.blob();
-        })
-        .then(blob => {
-          const videoBlobUrl = URL.createObjectURL(blob);
-          const videoEl = document.getElementById("localVideo");
-          videoEl.src = videoBlobUrl;
-        })
-        .catch(err => {
-          console.log("Using direct video stream:", err);
+    // =========================================================================
+    // เทคนิค Silent Preload: กระตุ้นการแคชวิดีโอทันทีที่สัมผัสจอครั้งแรก
+    // =========================================================================
+    let isPreloadTriggered = false;
+    function startSilentPreload() {
+      if (isPreloadTriggered) return;
+      isPreloadTriggered = true;
+      const v = document.getElementById("localVideo");
+      if (v) {
+        v.muted = true;
+        v.play().then(() => {
+          // สั่งพักไว้ทันที แค่นี้เบราว์เซอร์ก็จะโหลด Buffer มาตุนไว้ในเครื่องเงียบๆ แล้ว
+          setTimeout(() => {
+            v.pause();
+            v.currentTime = 0;
+          }, 150);
+        }).catch(err => {
+          console.log("Preload buffer notice:", err);
         });
-    });
+      }
+    }
+
+    window.addEventListener("touchstart", startSilentPreload, { passive: true });
+    window.addEventListener("mousedown", startSilentPreload);
+    window.addEventListener("keydown", startSilentPreload);
   </script>
 </body>
 </html>
