@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>A Gentle Birthday Walk & Our Memories ❤️</title>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700&family=Mali:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+    body {
+      background-color: #121418;
+      font-family: 'Prompt', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .game-viewport {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      height: 94vh;
+      max-height: 820px;
+      border: 5px solid #4a3319;
+      border-radius: 14px;
+      background: #7ec0ee;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.85);
+      perspective: 1200px;
+    }
+
+    canvas {
+      width: 100%;
+      flex: 1;
+      display: block;
+    }
+
+    /* แถบสถิติหัวใจ */
+    .hud-badge {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      background: rgba(45, 28, 14, 0.88);
+      border: 2px solid #c99355;
+      border-radius: 20px;
+      padding: 6px 14px;
+      color: #fff;
+      font-size: 13.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 10;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+
+    /* กล่องข้อความ Stardew Valley */
+    .stardew-dialogue {
+      position: absolute;
+      bottom: 120px;
+      left: 12px;
+      right: 12px;
+      background: #fae1b3;
+      border: 4px solid #5a3418;
+      outline: 3px solid #b87b44;
+      border-radius: 8px;
+      display: flex;
+      box-shadow: inset 0 0 10px rgba(117, 72, 33, 0.3), 0 8px 24px rgba(0,0,0,0.7);
+      z-index: 30;
+      cursor: pointer;
+      min-height: 120px;
+    }
+
+    .dialogue-body {
+      flex: 1;
+      padding: 12px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .dialogue-text {
+      color: #3b220c;
+      font-size: 14px;
+      line-height: 1.5;
+      font-weight: 600;
+    }
+
+    .dialogue-hint {
+      text-align: right;
+      color: #9c5821;
+      font-size: 11px;
+      font-weight: bold;
+      animation: pulse 0.9s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+
+    .portrait-box {
+      width: 100px;
+      background: #e8c892;
+      border-left: 3px solid #5a3418;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 4px;
+    }
+
+    .portrait-inner {
+      width: 72px;
+      height: 72px;
+      border: 3px solid #7c4820;
+      border-radius: 6px;
+      background: #d8b075;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .portrait-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+    }
+
+    .name-tag {
+      background: #6a3e1d;
+      color: #fae1b3;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-top: 5px;
+      border: 1px solid #b87b44;
+      text-align: center;
+      width: 90%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ปุ่มควบคุมเดิน/กระโดด */
+    .controls-panel {
+      height: 105px;
+      background: #1f140c;
+      border-top: 3px solid #5a3418;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      z-index: 20;
+    }
+
+    .dpad-row { display: flex; gap: 10px; }
+
+    .ctrl-btn {
+      background: #754622;
+      border: 2px solid #b87b44;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      width: 56px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #3b220c;
+      touch-action: manipulation;
+    }
+
+    .ctrl-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #3b220c;
+      background: #a86c39;
+    }
+
+    .btn-jump {
+      width: 82px;
+      background: #5b8c32;
+      border-color: #8ec354;
+      box-shadow: 0 4px 0 #325218;
+      font-size: 14.5px;
+    }
+
+    .btn-jump:active {
+      background: #8ec354;
+      box-shadow: 0 1px 0 #325218;
+    }
+
+    /* กล่องเปิดของขวัญ */
+    .gift-modal {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.9);
+      width: 86%;
+      background: #fae1b3;
+      border: 5px solid #5a3418;
+      outline: 4px solid #b87b44;
+      border-radius: 14px;
+      padding: 24px 18px;
+      text-align: center;
+      z-index: 45;
+      display: none;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.85);
+    }
+
+    .gift-modal.active {
+      display: block;
+      transform: translate(-50%, -50%) scale(1);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .gift-box-anim {
+      font-size: 60px;
+      margin-bottom: 10px;
+      animation: giftBounce 1.2s infinite ease-in-out alternate;
+      display: inline-block;
+    }
+
+    @keyframes giftBounce {
+      0% { transform: translateY(0) rotate(-4deg); }
+      100% { transform: translateY(-10px) rotate(4deg); }
+    }
+
+    .open-gift-btn {
+      margin-top: 14px;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #e74c3c, #ff7675);
+      color: #fff;
+      font-size: 15px;
+      font-weight: bold;
+      border: 2px solid #fff;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
+      animation: glow 1.2s infinite alternate;
+    }
+
+    @keyframes glow {
+      0% { box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3); }
+      100% { box-shadow: 0 6px 20px rgba(231, 76, 60, 0.8); }
+    }
+
+    /* =========================================
+       ระบบสมุดภาพความทรงจำ (แก้ไขปัญหาขนาดรูปดันปุ่มหลุดเฟรม)
+       ========================================= */
+    .book-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #23160e;
+      z-index: 100;
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 14px;
+      box-shadow: inset 0 0 50px rgba(0,0,0,0.9);
+      opacity: 0;
+      transform: scale(0.95);
+      transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      perspective: 1500px;
+      overflow: hidden; /* ป้องกันไม่ให้ภาพดันหลุดจอ */
+    }
+
+    .book-container.active {
+      display: flex;
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .book-page-wrapper {
+      flex: 1;
+      min-height: 0; /* สำคัญ: ป้องกันไม่ให้ flex item ขยายเกินกรอบ */
+      position: relative;
+      perspective: 1200px;
+      display: flex;
+      width: 100%;
+    }
+
+    .book-page {
+      background: #fdfbf7;
+      border-radius: 8px;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      padding: 16px 12px 10px 12px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+      border: 1px solid #dcd1be;
+      border-left: 6px solid #bca586;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      transform-origin: left center;
+      backface-visibility: hidden;
+      overflow: hidden;
+    }
+
+    .flip-forward {
+      animation: bookFlipForward 0.85s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    .flip-backward {
+      animation: bookFlipBackward 0.85s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    @keyframes bookFlipForward {
+      0% {
+        transform: rotateY(-65deg) scale(0.96);
+        opacity: 0.2;
+        box-shadow: -20px 10px 30px rgba(0,0,0,0.5);
+      }
+      50% { opacity: 0.8; }
+      100% {
+        transform: rotateY(0deg) scale(1);
+        opacity: 1;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+      }
+    }
+
+    @keyframes bookFlipBackward {
+      0% {
+        transform: rotateY(65deg) scale(0.96);
+        opacity: 0.2;
+        box-shadow: 20px 10px 30px rgba(0,0,0,0.5);
+      }
+      50% { opacity: 0.8; }
+      100% {
+        transform: rotateY(0deg) scale(1);
+        opacity: 1;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+      }
+    }
+
+    .tape-decor {
+      position: absolute;
+      top: -8px;
+      width: 65px;
+      height: 20px;
+      background: rgba(255, 230, 150, 0.65);
+      border: 1px dashed rgba(200, 180, 120, 0.5);
+      transform: rotate(-2deg);
+      z-index: 5;
+    }
+
+    /* กรอบโพลารอยด์ที่ล็อกขนาดคงที่ ไม่ให้รูปดันจนล้น */
+    .polaroid-frame {
+      background: #fff;
+      padding: 8px 8px 18px 8px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+      border-radius: 4px;
+      width: 95%;
+      flex: 1 1 auto;
+      max-height: 55%;
+      min-height: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid #eee;
+      overflow: hidden;
+      margin: 4px 0;
+    }
+
+    /* รูปภาพตัดครอบอย่างสมบูรณ์แบบ ไม่ว่าภาพต้นฉบับจะขนาดเท่าไหร่ */
+    .polaroid-img {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: cover; /* ครอบตัดรูปให้พอดีกรอบอย่างสวยงาม */
+      border-radius: 2px;
+      display: block;
+    }
+
+    /* กล่องสำหรับเล่นไฟล์วิดีโอ MP4 */
+    .video-stage-box {
+      width: 95%;
+      flex: 1 1 auto;
+      max-height: 55%;
+      min-height: 0;
+      background: #000;
+      border-radius: 10px;
+      border: 3px solid #5a3418;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      overflow: hidden;
+      display: none;
+      margin: 4px 0;
+    }
+
+    .video-stage-box video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      background: #000;
+    }
+
+    .memory-note {
+      font-family: 'Mali', cursive;
+      color: #4a3424;
+      font-size: 13.5px;
+      line-height: 1.55;
+      text-align: center;
+      padding: 8px 12px;
+      background: #fff9e6;
+      border-radius: 6px;
+      width: 100%;
+      border-left: 3px solid #ffaa42;
+      min-height: 52px;
+      max-height: 78px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow-y: auto;
+    }
+
+    .page-footer {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11.5px;
+      color: #9c8a78;
+      font-weight: bold;
+      border-top: 1px dashed #e4d7c5;
+      padding-top: 5px;
+      flex-shrink: 0;
+    }
+
+    /* แถบปุ่มควบคุมสมุดที่ถูกตรึงไว้ ไม่ให้มีวันหลุดเฟรม */
+    .book-controls {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 10px;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .book-nav-btn {
+      flex: 1;
+      padding: 11px 14px;
+      background: #5a3418;
+      border: 2px solid #b87b44;
+      border-radius: 8px;
+      color: #fae1b3;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: 0 4px 0 #301a0a;
+      transition: all 0.2s;
+    }
+
+    .book-nav-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #301a0a;
+    }
+
+    .book-nav-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="game-viewport">
+    <div class="hud-badge">
+      <span>เศษเสี้ยวหัวใจ:</span>
+      <span id="heartIconsDisplay">🤍 🤍 🤍 🤍</span>
+    </div>
+
+    <canvas id="gameCanvas" width="800" height="1080"></canvas>
+
+    <!-- กล่องบทสนทนา Stardew Valley -->
+    <div class="stardew-dialogue" id="dialogueBox" onclick="nextDialogueStep()">
+      <div class="dialogue-body">
+        <div class="dialogue-text" id="dialogueText">...</div>
+        <div class="dialogue-hint">แตะเพื่อไปต่อ ▼</div>
+      </div>
+      <div class="portrait-box">
+        <div class="portrait-inner">
+          <img src="fairy_portrait.png" id="portraitImg" class="portrait-img" alt="Speaker">
+        </div>
+        <div class="name-tag" id="speakerName">ภูติกิฟท์</div>
+      </div>
+    </div>
+
+    <!-- ปุ่มควบคุมเดิน/กระโดด -->
+    <div class="controls-panel">
+      <div class="dpad-row">
+        <div class="ctrl-btn" id="btnLeft">◀</div>
+        <div class="ctrl-btn" id="btnRight">▶</div>
+      </div>
+      <div class="ctrl-btn btn-jump" id="btnJump">กระโดด</div>
+    </div>
+
+    <!-- หน้าต่างเปิดกล่องของขวัญ -->
+    <div class="gift-modal" id="giftModal">
+      <div class="gift-box-anim">🎁✨</div>
+      <h2 style="color: #5a3418; font-size: 19px; margin-bottom: 6px;">ของขวัญสุดพิเศษ</h2>
+      <p style="color: #6a4427; font-size: 14px; line-height: 1.5;">
+        เธอตามหาหัวใจจนครบแล้วนะ!<br>มีสมุดบันทึกความทรงจำรออยู่ข้างใน...
+      </p>
+      <button class="open-gift-btn" onclick="openGiftBook()">
+        ✨ แตะเพื่อเปิดกล่องของขวัญ ✨
+      </button>
+    </div>
+
+    <!-- สมุดภาพความทรงจำ (Scrapbook) -->
+    <div class="book-container" id="bookView">
+      <div class="book-page-wrapper">
+        <div class="book-page" id="bookPage">
+          <div class="tape-decor"></div>
+          
+          <!-- กรอบรูปโพลารอยด์ (หน้า 1-5) -->
+          <div class="polaroid-frame" id="polaroidContainer">
+            <img src="memory1.jpg" id="memoryImg" class="polaroid-img" alt="Memory">
+          </div>
+
+          <!-- กล่องแสดงวิดีโอ MP4 โดยตรง (หน้า 6) -->
+          <div class="video-stage-box" id="videoContainer">
+            <video id="localVideo" controls playsinline preload="auto">
+              <source src="video.mp4" type="video/mp4">
+              เบราว์เซอร์ของคุณไม่รองรับการเล่นวิดีโอ
+            </video>
+          </div>
+
+          <div class="memory-note" id="memoryNoteText">
+            ข้อความความทรงจำ...
+          </div>
+
+          <div class="page-footer">
+            <span>OUR MEMORIES</span>
+            <span id="pageNumberDisplay">1 / 6</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="book-controls">
+        <button class="book-nav-btn" id="btnPrevPage" onclick="prevPage()">◀ ย้อนกลับ</button>
+        <button class="book-nav-btn" id="btnNextPage" onclick="nextPage()">หน้าถัดไป ▶</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ==========================================
+    // ข้อมูลรูปภาพ 5 รูป และหน้าสุดท้ายที่มีวิดีโอ MP4
+    // ==========================================
+    const albumPages = [
+      {
+        image: "memory1.png",
+        note: "📷 รูปแรกที่เราประทับใจ: 'ไปเที่ยวด้วยกันได้รูปเท่! มาด้วยละ อควาเรียมครั้งแรก' 💕"
+      },
+      {
+        image: "memory2.png",
+        note: "🍰 ทริปของกิน: 'ไม่ว่าจะไปที่ไหน แค่มีเธอนั่งกินข้าวด้วยกัน ทุกมื้อก็อร่อยขึ้นเสมอ' ✨"
+      },
+      {
+        image: "memory3.png",
+        note: "🌸 ช่วงเวลาแสนธรรมดา: 'ขอบคุณที่คอยเป็นพลังใจในวันที่เหนื่อยล้า เธอคือความสบายใจของเรานะ' 💖"
+      },
+      {
+        image: "memory4.png",
+        note: "🚗 การเดินทางไปด้วยกัน: 'เป็นเที่ยวต่างจังหวัดที่สนุกและมีความสุขมากเลยละ <3' 🌿"
+      },
+      {
+        image: "memory5.png",
+        note: "🎂 สุขสันต์วันเกิดนะ: 'ขอให้ปีนี้มีแต่รอยยิ้ม สุขภาพแข็งแรง เติบโตไปด้วยกันอีกปีนะค้าบ' 🎁"
+      },
+      {
+        isVideoEnding: true,
+        note: "🎬 วิดีโอชิ้นพิเศษที่เราตั้งใจทำไว้ให้เธอ สุขสันต์วันเกิดนะคนเก่ง! ❤️"
+      }
+    ];
+
+    let currentBookPage = 0;
+    let isPageFlipping = false;
+
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+
+    const SCALE = 2;
+
+    const girlWalkImg = new Image(); girlWalkImg.src = "girl_walk.png";
+    const boyStandImg = new Image(); boyStandImg.src = "boy_stand.png";
+    const fairyFlyImg = new Image(); fairyFlyImg.src = "fairy_fly.png";
+
+    const V_WIDTH = 400;
+    const V_HEIGHT = 540;
+    const LEVEL_WIDTH = 2000;
+    const GROUND_Y = 430;
+
+    const player = {
+      x: 80,
+      y: GROUND_Y - 96,
+      w: 68,
+      h: 96,
+      vx: 0,
+      vy: 0,
+      speed: 4.6,
+      jumpPower: -13.5,
+      gravity: 0.65,
+      grounded: true,
+      facing: 1
+    };
+
+    const boyNPC = {
+      x: 1750,
+      y: GROUND_Y - 98,
+      w: 70,
+      h: 98,
+      reached: false
+    };
+
+    const platforms = [
+      { x: 320, y: 310, w: 140, h: 26 },
+      { x: 620, y: 230, w: 150, h: 26 },
+      { x: 940, y: 300, w: 140, h: 26 },
+      { x: 1260, y: 220, w: 160, h: 26 },
+      { x: 1540, y: 310, w: 130, h: 26 }
+    ];
+
+    const clouds = [
+      { x: 40,  y: 40,  w: 90,  h: 32, speed: 0.3 },
+      { x: 350, y: 80,  w: 120, h: 40, speed: 0.45 },
+      { x: 750, y: 35,  w: 100, h: 36, speed: 0.25 },
+      { x: 1100, y: 70, w: 130, h: 42, speed: 0.4 },
+      { x: 1500, y: 45, w: 110, h: 38, speed: 0.35 },
+      { x: 1850, y: 65, w: 90,  h: 30, speed: 0.25 }
+    ];
+
+    const heartShards = [
+      { id: 1, x: 375, y: 260, collected: false, text: "พบเศษเสี้ยวที่ 1: 'วันแรกที่ได้เจอเธอ รอยยิ้มสดใสของเธอยังชัดเจนอยู่ในใจเสมอ' 💖" },
+      { id: 2, x: 680, y: 180, collected: false, text: "พบเศษเสี้ยวที่ 2: 'ช่วงเวลาที่ได้กินของอร่อย ๆ นั่งคุยหัวเราะด้วยกัน คือช่วงเวลาที่มีความสุขที่สุด' 🌸" },
+      { id: 3, x: 1325, y: 170, collected: false, text: "พบเศษเสี้ยวที่ 3: 'ขอบคุณที่คอยรับฟัง และเป็นความสบายใจให้กันในทุก ๆ วันนะ' ✨" },
+      { id: 4, x: 1590, y: 260, collected: false, text: "พบเศษเสี้ยวที่ 4: 'ครบแล้ว! หัวใจเต็มเปี่ยมไปด้วยความรัก และข้างหน้านั้น... มีคนยืนรอเธออยู่ใต้ต้นไม้!' 🎁" }
+    ];
+
+    let cameraX = 0;
+    let collectedHearts = 0;
+    let isDialogueActive = false;
+    let dialogueQueue = [];
+    let dialogueCallback = null;
+
+    const keys = { left: false, right: false, jump: false };
+
+    window.addEventListener("keydown", (e) => {
+      if (["ArrowLeft", "KeyA"].includes(e.code)) keys.left = true;
+      if (["ArrowRight", "KeyD"].includes(e.code)) keys.right = true;
+      if (["ArrowUp", "KeyW", "Space"].includes(e.code)) {
+        if (!keys.jump && player.grounded && !isDialogueActive) {
+          player.vy = player.jumpPower;
+          player.grounded = false;
+        }
+        keys.jump = true;
+      }
+      if (e.code === "Space" && isDialogueActive) nextDialogueStep();
+    });
+
+    window.addEventListener("keyup", (e) => {
+      if (["ArrowLeft", "KeyA"].includes(e.code)) keys.left = false;
+      if (["ArrowRight", "KeyD"].includes(e.code)) keys.right = false;
+      if (["ArrowUp", "KeyW", "Space"].includes(e.code)) keys.jump = false;
+    });
+
+    function bindTouch(id, keyName, isJump = false) {
+      const btn = document.getElementById(id);
+      const start = (e) => {
+        e.preventDefault();
+        if (isJump) {
+          if (player.grounded && !isDialogueActive) {
+            player.vy = player.jumpPower;
+            player.grounded = false;
+          }
+        } else {
+          keys[keyName] = true;
+        }
+      };
+      const end = (e) => { e.preventDefault(); if (!isJump) keys[keyName] = false; };
+      btn.addEventListener("touchstart", start);
+      btn.addEventListener("touchend", end);
+      btn.addEventListener("mousedown", start);
+      btn.addEventListener("mouseup", end);
+    }
+    bindTouch("btnLeft", "left");
+    bindTouch("btnRight", "right");
+    bindTouch("btnJump", "jump", true);
+
+    function showDialogue(speaker, text, portraitFile, callback = null) {
+      const box = document.getElementById("dialogueBox");
+      document.getElementById("speakerName").textContent = speaker;
+      document.getElementById("dialogueText").textContent = text;
+      document.getElementById("portraitImg").src = portraitFile;
+
+      box.style.display = "flex";
+      isDialogueActive = true;
+      dialogueCallback = callback;
+    }
+
+    function queueDialogues(list, onComplete = null) {
+      dialogueQueue = [...list];
+      processNextDialogue(onComplete);
+    }
+
+    function processNextDialogue(onComplete) {
+      if (dialogueQueue.length > 0) {
+        const item = dialogueQueue.shift();
+        showDialogue(item.speaker, item.text, item.portrait, () => {
+          processNextDialogue(onComplete);
+        });
+      } else {
+        document.getElementById("dialogueBox").style.display = "none";
+        isDialogueActive = false;
+        if (onComplete) onComplete();
+      }
+    }
+
+    function nextDialogueStep() {
+      if (dialogueCallback) {
+        const cb = dialogueCallback;
+        dialogueCallback = null;
+        cb();
+      }
+    }
+
+    function update() {
+      clouds.forEach(c => {
+        c.x += c.speed;
+        if (c.x > LEVEL_WIDTH + 150) c.x = -180;
+      });
+
+      if (isDialogueActive) return;
+
+      if (keys.left) {
+        player.vx = -player.speed;
+        player.facing = -1;
+      } else if (keys.right) {
+        player.vx = player.speed;
+        player.facing = 1;
+      } else {
+        player.vx = 0;
+      }
+
+      player.x += player.vx;
+      if (player.x < 10) player.x = 10;
+      if (player.x > LEVEL_WIDTH - player.w - 10) player.x = LEVEL_WIDTH - player.w - 10;
+
+      player.vy += player.gravity;
+      player.y += player.vy;
+
+      if (player.y >= GROUND_Y - player.h) {
+        player.y = GROUND_Y - player.h;
+        player.vy = 0;
+        player.grounded = true;
+      } else {
+        player.grounded = false;
+      }
+
+      platforms.forEach(p => {
+        if (
+          player.x + player.w * 0.7 > p.x &&
+          player.x + player.w * 0.3 < p.x + p.w &&
+          player.y + player.h >= p.y &&
+          player.y + player.h <= p.y + 16 &&
+          player.vy >= 0
+        ) {
+          player.y = p.y - player.h;
+          player.vy = 0;
+          player.grounded = true;
+        }
+      });
+
+      heartShards.forEach(s => {
+        if (!s.collected) {
+          if (
+            player.x + player.w > s.x - 14 &&
+            player.x < s.x + 30 &&
+            player.y + player.h > s.y - 14 &&
+            player.y < s.y + 30
+          ) {
+            s.collected = true;
+            collectedHearts++;
+            updateHeartHUD();
+
+            queueDialogues([
+              { speaker: "เศษเสี้ยวหัวใจ", portrait: "girl_portrait.png", text: s.text }
+            ]);
+          }
+        }
+      });
+
+      // ตรวจสอบเงื่อนไขหัวใจ 4 ดวงเมื่อเดินชนแฟนหนุ่ม
+      if (!boyNPC.reached && player.x + player.w >= boyNPC.x - 20) {
+        if (collectedHearts < 4) {
+          player.x = boyNPC.x - player.w - 36;
+          keys.right = false;
+          queueDialogues([
+            {
+              speaker: "แฟนสุดที่รัก",
+              portrait: "boy_portrait.png",
+              text: "อ้าวคนเก่ง! เดินมาถึงตรงนี้แล้วเหรอเนี่ย แต่กล่องของขวัญชิ้นนี้ยังล็อคอยู่นะ..."
+            },
+            {
+              speaker: "แฟนสุดที่รัก",
+              portrait: "boy_portrait.png",
+              text: `ตอนนี้เธอเพิ่งตามหาหัวใจได้ ${collectedHearts}/4 เศษเอง ลองเดินย้อนกลับไปกระโดดเก็บให้ครบ 4 เสี้ยวก่อนนะ แล้วค่อยกลับมารับของขวัญชิ้นนี้จากเค้า! สู้ ๆ ค้าบ 💖`
+            }
+          ]);
+        } else {
+          boyNPC.reached = true;
+          queueDialogues([
+            {
+              speaker: "แฟนสุดที่รัก",
+              portrait: "boy_portrait.png",
+              text: "สุขสันต์วันเกิดนะคนเก่ง! ตามเก็บหัวใจจนครบ 4 ชิ้นแล้ว เก่งมาก ๆ เลย ❤️"
+            },
+            {
+              speaker: "แฟนสุดที่รัก",
+              portrait: "boy_portrait.png",
+              text: "ของขวัญชิ้นพิเศษและหัวใจทั้งหมดนี้ ขอมอบให้เธอคนเดียวเลยนะ ลองเปิดดูสิ! 🎁"
+            }
+          ], () => {
+            document.getElementById("giftModal").classList.add("active");
+            confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+          });
+        }
+      }
+
+      cameraX = player.x - V_WIDTH / 2 + player.w / 2;
+      if (cameraX < 0) cameraX = 0;
+      if (cameraX > LEVEL_WIDTH - V_WIDTH) cameraX = LEVEL_WIDTH - V_WIDTH;
+    }
+
+    function updateHeartHUD() {
+      const icons = ["🤍", "🤍", "🤍", "🤍"];
+      for (let i = 0; i < collectedHearts; i++) icons[i] = "❤️";
+      document.getElementById("heartIconsDisplay").textContent = icons.join(" ");
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.scale(SCALE, SCALE);
+
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+      skyGrad.addColorStop(0, "#5ea7e6");
+      skyGrad.addColorStop(0.7, "#90caf9");
+      skyGrad.addColorStop(1, "#cce9ff");
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, V_WIDTH, V_HEIGHT);
+
+      ctx.save();
+      ctx.translate(-Math.floor(cameraX), 0);
+
+      clouds.forEach(c => drawPixelCloud(c.x, c.y, c.w, c.h));
+      drawBackgroundHills();
+      drawPixelGround();
+      platforms.forEach(p => drawPixelPlatform(p.x, p.y, p.w, p.h));
+      drawCherryBlossomTree(1720, GROUND_Y);
+
+      heartShards.forEach(s => {
+        if (!s.collected) {
+          const bounce = Math.sin(Date.now() / 180) * 5;
+          ctx.font = "26px sans-serif";
+          ctx.fillText("💖", s.x, s.y + bounce);
+        }
+      });
+
+      if (boyStandImg.complete && boyStandImg.naturalWidth !== 0) {
+        ctx.drawImage(boyStandImg, boyNPC.x, boyNPC.y, boyNPC.w, boyNPC.h);
+      } else {
+        ctx.fillStyle = "#3498db";
+        ctx.fillRect(boyNPC.x, boyNPC.y, boyNPC.w, boyNPC.h);
+      }
+
+      // ภูติกิฟท์
+      const fairyFloat = Math.sin(Date.now() / 200) * 5;
+      const fairyTargetX = player.x - (player.facing * 46);
+      const fairyTargetY = player.y + 12 + fairyFloat;
+      const fairyW = 46;
+      const fairyH = 46;
+
+      ctx.save();
+      if (player.facing === 1) {
+        ctx.translate(fairyTargetX, fairyTargetY);
+        if (fairyFlyImg.complete && fairyFlyImg.naturalWidth !== 0) {
+          ctx.drawImage(fairyFlyImg, 0, 0, fairyW, fairyH);
+        }
+      } else {
+        ctx.translate(fairyTargetX + fairyW, fairyTargetY);
+        ctx.scale(-1, 1);
+        if (fairyFlyImg.complete && fairyFlyImg.naturalWidth !== 0) {
+          ctx.drawImage(fairyFlyImg, 0, 0, fairyW, fairyH);
+        }
+      }
+      ctx.restore();
+
+      // แฟนสาว
+      ctx.save();
+      if (girlWalkImg.complete && girlWalkImg.naturalWidth !== 0) {
+        if (player.facing === -1) {
+          ctx.translate(player.x + player.w, player.y);
+          ctx.scale(-1, 1);
+          ctx.drawImage(girlWalkImg, 0, 0, player.w, player.h);
+        } else {
+          ctx.drawImage(girlWalkImg, player.x, player.y, player.w, player.h);
+        }
+      } else {
+        ctx.fillStyle = "#e91e63";
+        ctx.fillRect(player.x, player.y, player.w, player.h);
+      }
+      ctx.restore();
+
+      ctx.restore();
+      ctx.restore();
+    }
+
+    function drawPixelCloud(x, y, w, h) {
+      ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+      ctx.fillRect(x + w * 0.2, y, w * 0.6, h);
+      ctx.fillRect(x, y + h * 0.35, w, h * 0.65);
+      ctx.fillRect(x + w * 0.1, y + h * 0.15, w * 0.8, h * 0.85);
+      ctx.fillStyle = "rgba(214, 234, 250, 0.9)";
+      ctx.fillRect(x + 4, y + h - 5, w - 8, 5);
+    }
+
+    function drawBackgroundHills() {
+      for (let x = 30; x < LEVEL_WIDTH; x += 420) {
+        ctx.fillStyle = "#7dc294";
+        ctx.beginPath();
+        ctx.arc(x + 120, GROUND_Y + 70, 150, Math.PI, 0);
+        ctx.fill();
+        ctx.fillStyle = "#68b481";
+        ctx.beginPath();
+        ctx.arc(x + 260, GROUND_Y + 80, 130, Math.PI, 0);
+        ctx.fill();
+      }
+    }
+
+    function drawPixelGround() {
+      ctx.fillStyle = "#5c3a1e";
+      ctx.fillRect(0, GROUND_Y + 14, LEVEL_WIDTH, V_HEIGHT - GROUND_Y);
+
+      ctx.fillStyle = "#432812";
+      ctx.fillRect(0, GROUND_Y + 36, LEVEL_WIDTH, V_HEIGHT - (GROUND_Y + 36));
+
+      ctx.fillStyle = "#5c9e31";
+      ctx.fillRect(0, GROUND_Y, LEVEL_WIDTH, 14);
+
+      ctx.fillStyle = "#7bc83d";
+      ctx.fillRect(0, GROUND_Y - 3, LEVEL_WIDTH, 4);
+      for (let x = 0; x < LEVEL_WIDTH; x += 10) {
+        ctx.fillRect(x, GROUND_Y + 2, 5, 5);
+      }
+
+      for (let x = 40; x < LEVEL_WIDTH; x += 80) {
+        ctx.fillStyle = (x % 160 === 0) ? "#ff758c" : "#ffd166";
+        ctx.fillRect(x, GROUND_Y - 5, 4, 4);
+      }
+    }
+
+    function drawPixelPlatform(x, y, w, h) {
+      ctx.fillStyle = "#5c3a1e";
+      ctx.fillRect(x, y + 8, w, h - 8);
+      ctx.fillStyle = "#432812";
+      ctx.fillRect(x + 4, y + h - 5, w - 8, 5);
+
+      ctx.fillStyle = "#5c9e31";
+      ctx.fillRect(x, y, w, 8);
+      ctx.fillStyle = "#7bc83d";
+      ctx.fillRect(x, y - 2, w, 3);
+
+      ctx.fillStyle = "#5c9e31";
+      ctx.fillRect(x + 12, y + h, 4, 8);
+      ctx.fillRect(x + w - 20, y + h, 4, 9);
+    }
+
+    function drawCherryBlossomTree(x, y) {
+      ctx.fillStyle = "#4e321b";
+      ctx.fillRect(x + 70, y - 130, 26, 130);
+      ctx.fillRect(x + 58, y - 60, 48, 60);
+
+      ctx.fillStyle = "#ffafcc";
+      ctx.beginPath();
+      ctx.arc(x + 83, y - 150, 70, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#ffc2d1";
+      ctx.beginPath();
+      ctx.arc(x + 45, y - 135, 48, 0, Math.PI * 2);
+      ctx.arc(x + 118, y - 135, 50, 0, Math.PI * 2);
+      ctx.fill();
+
+      const t = Date.now() / 300;
+      ctx.fillStyle = "#ff8fab";
+      ctx.fillRect(x + 40 + Math.sin(t) * 14, y - 60 + (t % 40) * 2, 5, 5);
+      ctx.fillRect(x + 105 + Math.cos(t) * 12, y - 80 + (t % 50) * 2, 5, 5);
+    }
+
+    // ==========================================
+    // ฟังก์ชันเปิดสมุดภาพและควบคุมวิดีโอ MP4
+    // ==========================================
+    function openGiftBook() {
+      document.getElementById("giftModal").classList.remove("active");
+
+      const end = Date.now() + 3.5 * 1000;
+      (function frame() {
+        confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
+        confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      }());
+
+      const bookView = document.getElementById("bookView");
+      bookView.style.display = "flex";
+      setTimeout(() => bookView.classList.add("active"), 80);
+      
+      renderBookPage('forward');
+    }
+
+    function renderBookPage(direction = 'forward') {
+      isPageFlipping = true;
+      const pageData = albumPages[currentBookPage];
+      const pageContainer = document.getElementById("bookPage");
+      const polaroid = document.getElementById("polaroidContainer");
+      const videoBox = document.getElementById("videoContainer");
+      const localVideo = document.getElementById("localVideo");
+      const imgEl = document.getElementById("memoryImg");
+      const noteEl = document.getElementById("memoryNoteText");
+      const pageNumEl = document.getElementById("pageNumberDisplay");
+      const btnPrev = document.getElementById("btnPrevPage");
+      const btnNext = document.getElementById("btnNextPage");
+
+      pageContainer.classList.remove('flip-forward', 'flip-backward');
+      pageContainer.offsetHeight;
+
+      if (direction === 'forward') {
+        pageContainer.classList.add('flip-forward');
+      } else {
+        pageContainer.classList.add('flip-backward');
+      }
+
+      btnPrev.disabled = (currentBookPage === 0);
+
+      if (pageData.isVideoEnding) {
+        // หน้าที่ 6: ซ่อนโพลารอยด์ แล้วเปิดวิดีโอ MP4 เล่นโดยตรง
+        polaroid.style.display = "none";
+        videoBox.style.display = "block";
+        noteEl.textContent = pageData.note;
+        btnNext.disabled = true;
+
+        localVideo.currentTime = 0;
+        localVideo.play().catch(e => {
+          console.log("Autoplay prevented:", e);
+        });
+      } else {
+        // หน้าที่ 1-5: หยุดเล่นวิดีโอ และแสดงรูปภาพปกติ
+        if (!localVideo.paused) {
+          localVideo.pause();
+        }
+        videoBox.style.display = "none";
+        polaroid.style.display = "flex";
+        imgEl.src = pageData.image;
+        noteEl.textContent = pageData.note;
+        btnNext.disabled = false;
+      }
+
+      pageNumEl.textContent = `${currentBookPage + 1} / ${albumPages.length}`;
+
+      setTimeout(() => {
+        isPageFlipping = false;
+      }, 850);
+    }
+
+    function nextPage() {
+      if (isPageFlipping) return;
+      if (currentBookPage < albumPages.length - 1) {
+        currentBookPage++;
+        renderBookPage('forward');
+      }
+    }
+
+    function prevPage() {
+      if (isPageFlipping) return;
+      if (currentBookPage > 0) {
+        currentBookPage--;
+        renderBookPage('backward');
+      }
+    }
+
+    function gameLoop() {
+      update();
+      render();
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+
+    queueDialogues([
+      {
+        speaker: "ภูติกิฟท์",
+        portrait: "fairy_portrait.png",
+        text: "ฮัลโหลลล! ยินดีต้อนรับสู่ทุ่งหญ้าพิกเซลแห่งความสุขนะ ✨"
+      },
+      {
+        speaker: "ภูติกิฟท์",
+        portrait: "fairy_portrait.png",
+        text: "ตามทางจะมีเศษเสี้ยวหัวใจ 4 ดวงลอยอยู่ ลองเดินและกระโดดขึ้นไปเก็บให้ครบนะ... ปลายทางมีใครบางคนรอส่งมอบของขวัญอยู่ด้วยล่ะ!"
+      }
+    ]);
+  </script>
+</body>
+</html>
