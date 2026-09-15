@@ -257,9 +257,7 @@
       100% { box-shadow: 0 6px 20px rgba(231, 76, 60, 0.8); }
     }
 
-    /* =========================================
-       ระบบสมุดภาพความทรงจำ (แก้ไขปัญหาขนาดรูปดันปุ่มหลุดเฟรม)
-       ========================================= */
+    /* สมุดภาพความทรงจำ */
     .book-container {
       position: absolute;
       top: 0;
@@ -277,7 +275,7 @@
       transform: scale(0.95);
       transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
       perspective: 1500px;
-      overflow: hidden; /* ป้องกันไม่ให้ภาพดันหลุดจอ */
+      overflow: hidden;
     }
 
     .book-container.active {
@@ -288,7 +286,7 @@
 
     .book-page-wrapper {
       flex: 1;
-      min-height: 0; /* สำคัญ: ป้องกันไม่ให้ flex item ขยายเกินกรอบ */
+      min-height: 0;
       position: relative;
       perspective: 1200px;
       display: flex;
@@ -362,7 +360,6 @@
       z-index: 5;
     }
 
-    /* กรอบโพลารอยด์ที่ล็อกขนาดคงที่ ไม่ให้รูปดันจนล้น */
     .polaroid-frame {
       background: #fff;
       padding: 8px 8px 18px 8px;
@@ -380,13 +377,12 @@
       margin: 4px 0;
     }
 
-    /* รูปภาพตัดครอบอย่างสมบูรณ์แบบ ไม่ว่าภาพต้นฉบับจะขนาดเท่าไหร่ */
     .polaroid-img {
       width: 100%;
       height: 100%;
       max-width: 100%;
       max-height: 100%;
-      object-fit: cover; /* ครอบตัดรูปให้พอดีกรอบอย่างสวยงาม */
+      object-fit: cover;
       border-radius: 2px;
       display: block;
     }
@@ -447,7 +443,6 @@
       flex-shrink: 0;
     }
 
-    /* แถบปุ่มควบคุมสมุดที่ถูกตรึงไว้ ไม่ให้มีวันหลุดเฟรม */
     .book-controls {
       display: flex;
       justify-content: space-between;
@@ -535,12 +530,11 @@
         <div class="book-page" id="bookPage">
           <div class="tape-decor"></div>
           
-          <!-- กรอบรูปโพลารอยด์ (หน้า 1-5) -->
           <div class="polaroid-frame" id="polaroidContainer">
-            <img src="memory1.jpg" id="memoryImg" class="polaroid-img" alt="Memory">
+            <img src="memory1.png" id="memoryImg" class="polaroid-img" alt="Memory">
           </div>
 
-          <!-- กล่องแสดงวิดีโอ MP4 โดยตรง (หน้า 6) -->
+          <!-- ลิงก์ตรงไฟล์วิดีโอ Catbox -->
           <div class="video-stage-box" id="videoContainer">
             <video id="localVideo" controls playsinline preload="auto">
               <source src="https://files.catbox.moe/ti6kgo.mp4" type="video/mp4">
@@ -568,17 +562,14 @@
   </div>
 
   <script>
-    // ==========================================
-    // ข้อมูลรูปภาพ 5 รูป และหน้าสุดท้ายที่มีวิดีโอ MP4
-    // ==========================================
     const albumPages = [
       {
         image: "memory1.png",
-        note: "📷 รูปแรกที่เราประทับใจ: 'ไปเที่ยวด้วยกันได้รูปเท่! มาด้วยละ อควาเรียมครั้งแรก' 💕"
+        note: "📷 รูปแรกที่เราประทับใจ: 'วันนั้นน่ารักยังไง วันนี้ก็น่ารักเหมือนเดิมเลยนะ' 💕"
       },
       {
         image: "memory2.png",
-        note: "🍰 ทริปของกิน: 'ไม่ว่าจะไปที่ไหน แค่มีเธอนั่งกินข้าวด้วยกัน ทุกมื้อก็อร่อยขึ้นเสมอ' ✨"
+        note: "🍜 ทริปของกินสุดโปรด: 'ไม่ว่าจะไปที่ไหน แค่มีเธอนั่งกินข้าวด้วยกัน ทุกมื้อก็อร่อยขึ้นเสมอ' ✨"
       },
       {
         image: "memory3.png",
@@ -586,7 +577,7 @@
       },
       {
         image: "memory4.png",
-        note: "🚗 การเดินทางไปด้วยกัน: 'เป็นเที่ยวต่างจังหวัดที่สนุกและมีความสุขมากเลยละ <3' 🌿"
+        note: "🚗 การเดินทางไปด้วยกัน: 'ทุกก้าวที่ได้เดินข้าง ๆ กัน คือความทรงจำที่ดีที่สุดของเราเลย' 🌿"
       },
       {
         image: "memory5.png",
@@ -817,7 +808,6 @@
         }
       });
 
-      // ตรวจสอบเงื่อนไขหัวใจ 4 ดวงเมื่อเดินชนแฟนหนุ่ม
       if (!boyNPC.reached && player.x + player.w >= boyNPC.x - 20) {
         if (collectedHearts < 4) {
           player.x = boyNPC.x - player.w - 36;
@@ -902,7 +892,6 @@
         ctx.fillRect(boyNPC.x, boyNPC.y, boyNPC.w, boyNPC.h);
       }
 
-      // ภูติกิฟท์
       const fairyFloat = Math.sin(Date.now() / 200) * 5;
       const fairyTargetX = player.x - (player.facing * 46);
       const fairyTargetY = player.y + 12 + fairyFloat;
@@ -924,7 +913,6 @@
       }
       ctx.restore();
 
-      // แฟนสาว
       ctx.save();
       if (girlWalkImg.complete && girlWalkImg.naturalWidth !== 0) {
         if (player.facing === -1) {
@@ -1026,9 +1014,6 @@
       ctx.fillRect(x + 105 + Math.cos(t) * 12, y - 80 + (t % 50) * 2, 5, 5);
     }
 
-    // ==========================================
-    // ฟังก์ชันเปิดสมุดภาพและควบคุมวิดีโอ MP4
-    // ==========================================
     function openGiftBook() {
       document.getElementById("giftModal").classList.remove("active");
 
@@ -1071,7 +1056,6 @@
       btnPrev.disabled = (currentBookPage === 0);
 
       if (pageData.isVideoEnding) {
-        // หน้าที่ 6: ซ่อนโพลารอยด์ แล้วเปิดวิดีโอ MP4 เล่นโดยตรง
         polaroid.style.display = "none";
         videoBox.style.display = "block";
         noteEl.textContent = pageData.note;
@@ -1079,10 +1063,9 @@
 
         localVideo.currentTime = 0;
         localVideo.play().catch(e => {
-          console.log("Autoplay prevented:", e);
+          console.log("Autoplay note:", e);
         });
       } else {
-        // หน้าที่ 1-5: หยุดเล่นวิดีโอ และแสดงรูปภาพปกติ
         if (!localVideo.paused) {
           localVideo.pause();
         }
@@ -1136,6 +1119,23 @@
         text: "ตามทางจะมีเศษเสี้ยวหัวใจ 4 ดวงลอยอยู่ ลองเดินและกระโดดขึ้นไปเก็บให้ครบนะ... ปลายทางมีใครบางคนรอส่งมอบของขวัญอยู่ด้วยล่ะ!"
       }
     ]);
+
+    // โหลดไฟล์วิดีโอล่วงหน้าลงแรมทันทีที่เริ่มเปิดหน้าเว็บ
+    window.addEventListener("load", () => {
+      fetch("https://files.catbox.moe/ti6kgo.mp4")
+        .then(response => {
+          if (!response.ok) throw new Error("Network response was not ok");
+          return response.blob();
+        })
+        .then(blob => {
+          const videoBlobUrl = URL.createObjectURL(blob);
+          const videoEl = document.getElementById("localVideo");
+          videoEl.src = videoBlobUrl;
+        })
+        .catch(err => {
+          console.log("Using direct video stream:", err);
+        });
+    });
   </script>
 </body>
 </html>
