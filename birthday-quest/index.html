@@ -360,6 +360,7 @@
       z-index: 5;
     }
 
+    /* กรอบรูปหน้า 1-5 */
     .polaroid-frame {
       background: #fff;
       padding: 8px 8px 18px 8px;
@@ -387,39 +388,74 @@
       display: block;
     }
 
-    /* กล่องวิดีโอแบบ Silent Preload: ไม่ใช้ display: none เพื่อให้เบราว์เซอร์แอบโหลดแคชตลอดเวลา */
-    .video-stage-box {
+    /* =========================================
+       การ์ดภาพยนตร์หน้าสุดท้าย (เปิดคลิปภายนอก)
+       ========================================= */
+    .cinema-card {
       width: 95%;
       flex: 1 1 auto;
       max-height: 55%;
       min-height: 0;
-      background: #000;
-      border-radius: 10px;
-      border: 3px solid #5a3418;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-      overflow: hidden;
+      background: linear-gradient(145deg, #2b170c, #4a2914);
+      border: 3px solid #d4af37;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 16px 12px;
+      text-align: center;
       margin: 4px 0;
-      position: absolute;
-      top: -9999px;
-      left: -9999px;
-      opacity: 0;
-      pointer-events: none;
+      color: #fff;
     }
 
-    .video-stage-box.show {
-      position: relative;
-      top: 0;
-      left: 0;
-      opacity: 1;
-      pointer-events: auto;
+    .cinema-icon {
+      font-size: 45px;
+      margin-bottom: 8px;
+      animation: heartPulse 1.2s infinite alternate;
     }
 
-    .video-stage-box video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      display: block;
-      background: #000;
+    @keyframes heartPulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.15); }
+    }
+
+    .cinema-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffd166;
+      margin-bottom: 6px;
+    }
+
+    .cinema-desc {
+      font-size: 12px;
+      color: #f1dfcf;
+      line-height: 1.4;
+      margin-bottom: 14px;
+    }
+
+    .btn-play-video {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #e74c3c, #ff4757);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 12px 20px;
+      border-radius: 30px;
+      text-decoration: none;
+      box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5);
+      border: 2px solid #fff;
+      cursor: pointer;
+      animation: videoBtnGlow 1.2s infinite alternate;
+    }
+
+    @keyframes videoBtnGlow {
+      0% { transform: scale(1); box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4); }
+      100% { transform: scale(1.04); box-shadow: 0 8px 24px rgba(231, 76, 60, 0.85); }
     }
 
     .memory-note {
@@ -542,16 +578,19 @@
         <div class="book-page" id="bookPage">
           <div class="tape-decor"></div>
           
+          <!-- กรอบรูปหน้า 1-5 -->
           <div class="polaroid-frame" id="polaroidContainer">
             <img src="memory1.png" id="memoryImg" class="polaroid-img" alt="Memory">
           </div>
 
-          <!-- วิดีโอคงอยู่ใน DOM เสมอเพื่อแอบดูด Buffer ล่วงหน้า -->
-          <div class="video-stage-box" id="videoContainer">
-            <video id="localVideo" controls playsinline preload="auto" muted>
-              <source src="https://files.catbox.moe/ti6kgo.mp4" type="video/mp4">
-              เบราว์เซอร์ของคุณไม่รองรับการเล่นวิดีโอ
-            </video>
+          <!-- การ์ดเปิดวิดีโอหน้า 6 -->
+          <div class="cinema-card" id="cinemaCard">
+            <div class="cinema-icon">🎬✨</div>
+            <div class="cinema-title">OUR SPECIAL VIDEO</div>
+            <div class="cinema-desc">วิดีโอของขวัญสุดพิเศษที่เราตั้งใจตัดต่อเพื่อเธอคนเดียว ❤️<br>(แตะปุ่มเพื่อรับชมแบบ Full HD)</div>
+            <a href="#" id="videoExternalBtn" target="_blank" class="btn-play-video">
+              ▶ กดเปิดดูวิดีโอของเรา
+            </a>
           </div>
 
           <div class="memory-note" id="memoryNoteText">
@@ -574,6 +613,11 @@
   </div>
 
   <script>
+    // =========================================================================
+    // ลิงก์ Google Drive ของคุณถูกเชื่อมต่อไว้ตรงนี้เรียบร้อยแล้ว
+    // =========================================================================
+    const VIDEO_EXTERNAL_URL = "https://drive.google.com/file/d/1bZiEK3Fkmlozd6xm63eWBAAKVVph7L_n/view?usp=drive_link";
+
     const albumPages = [
       {
         image: "memory1.png",
@@ -597,7 +641,7 @@
       },
       {
         isVideoEnding: true,
-        note: "🎬 วิดีโอชิ้นพิเศษที่เราตั้งใจทำไว้ให้เธอ สุขสันต์วันเกิดนะคนเก่ง! ❤️"
+        note: "🎬 แตะที่ปุ่มด้านบนเพื่อรับชมวิดีโอพิเศษที่เราตั้งใจทำไว้ให้นะ สุขสันต์วันเกิดนะคนเก่ง! ❤️"
       }
     ];
 
@@ -1040,6 +1084,9 @@
       bookView.style.display = "flex";
       setTimeout(() => bookView.classList.add("active"), 80);
       
+      // ตั้งค่าลิงก์ไปยัง Google Drive
+      document.getElementById("videoExternalBtn").href = VIDEO_EXTERNAL_URL;
+
       renderBookPage('forward');
     }
 
@@ -1048,8 +1095,7 @@
       const pageData = albumPages[currentBookPage];
       const pageContainer = document.getElementById("bookPage");
       const polaroid = document.getElementById("polaroidContainer");
-      const videoBox = document.getElementById("videoContainer");
-      const localVideo = document.getElementById("localVideo");
+      const cinemaCard = document.getElementById("cinemaCard");
       const imgEl = document.getElementById("memoryImg");
       const noteEl = document.getElementById("memoryNoteText");
       const pageNumEl = document.getElementById("pageNumberDisplay");
@@ -1068,22 +1114,16 @@
       btnPrev.disabled = (currentBookPage === 0);
 
       if (pageData.isVideoEnding) {
+        // หน้าที่ 6: แสดงการ์ดปุ่มเปิดวิดีโอ Full HD
         polaroid.style.display = "none";
-        videoBox.classList.add("show");
+        cinemaCard.style.display = "flex";
         noteEl.textContent = pageData.note;
         btnNext.disabled = true;
 
-        // ปลดเสียงและเล่นต่อเนื่องทันที
-        localVideo.muted = false;
-        localVideo.currentTime = 0;
-        localVideo.play().catch(e => {
-          console.log("Play note:", e);
-        });
+        confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 } });
       } else {
-        if (!localVideo.paused) {
-          localVideo.pause();
-        }
-        videoBox.classList.remove("show");
+        // หน้าที่ 1-5: แสดงภาพโพลารอยด์
+        cinemaCard.style.display = "none";
         polaroid.style.display = "flex";
         imgEl.src = pageData.image;
         noteEl.textContent = pageData.note;
@@ -1133,32 +1173,6 @@
         text: "ตามทางจะมีเศษเสี้ยวหัวใจ 4 ดวงลอยอยู่ ลองเดินและกระโดดขึ้นไปเก็บให้ครบนะ... ปลายทางมีใครบางคนรอส่งมอบของขวัญอยู่ด้วยล่ะ!"
       }
     ]);
-
-    // =========================================================================
-    // เทคนิค Silent Preload: กระตุ้นการแคชวิดีโอทันทีที่สัมผัสจอครั้งแรก
-    // =========================================================================
-    let isPreloadTriggered = false;
-    function startSilentPreload() {
-      if (isPreloadTriggered) return;
-      isPreloadTriggered = true;
-      const v = document.getElementById("localVideo");
-      if (v) {
-        v.muted = true;
-        v.play().then(() => {
-          // สั่งพักไว้ทันที แค่นี้เบราว์เซอร์ก็จะโหลด Buffer มาตุนไว้ในเครื่องเงียบๆ แล้ว
-          setTimeout(() => {
-            v.pause();
-            v.currentTime = 0;
-          }, 150);
-        }).catch(err => {
-          console.log("Preload buffer notice:", err);
-        });
-      }
-    }
-
-    window.addEventListener("touchstart", startSilentPreload, { passive: true });
-    window.addEventListener("mousedown", startSilentPreload);
-    window.addEventListener("keydown", startSilentPreload);
   </script>
 </body>
 </html>
